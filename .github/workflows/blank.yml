@@ -2,9 +2,7 @@ name: CI/CD for WordPress
 
 on:
   push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+    branches: [main]
 
 env:
   DOCKER_USERNAME: 'bucaothu'
