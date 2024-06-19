@@ -1,36 +1,72 @@
-# This is a basic workflow to help you get started with Actions
+name: CI/CD for WordPress
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: [master]
   pull_request:
-    branches: [ "main" ]
+    branches: [master]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+env:
+  DOCKER_USERNAME: 'bucaothu'
+  DOCKER_PASSWORD: 'Fuckyoustoler12'
+  MYSQL_HOST: 'mysql_db:3306'
+  MYSQL_USER: 'wordpress_user'
+  MYSQL_PASSWORD: '270701'
+  MYSQL_ROOT_PASSWORD: 'root'
+  MYSQL_DATABASE: 'wordpress'
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+
+
+
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os-buildx-${{ github.sha
+          restore-keys: |
+            ${{ runner.os-buildx-
+
+      - name: Debug Docker username
+        run: echo $DOCKER_USERNAME
+
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: $DOCKER_USERNAME
+          password: $DOCKER_PASSWORD
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./wordpress
+          push: true
+          tags: dinhhongkong/demo_wordpress_cicd:latest
+
+      - name: Set up environment variables
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          echo "MYSQL_HOST=$MYSQL_HOST"
+          echo "MYSQL_USER=$MYSQL_USER"
+          echo "MYSQL_PASSWORD=$MYSQL_PASSWORD"
+          echo "MYSQL_DATABASE=$MYSQL_DATABASE"
+          echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD"
+
+      - name: Set up Docker Compose
+        run: docker-compose -f docker-compose.yml up -d
+
+      - name: Wait for services to be ready
+        run: sleep 60
+
+      - name: Tear down Docker Compose
+        run: docker-compose -f docker-compose.yml down
