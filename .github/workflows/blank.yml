@@ -50,7 +50,7 @@ jobs:
         with:
           context: ./wordpress
           push: true
-          tags: dinhhongkong/demo_wordpress_cicd:latest
+          tags: bucaothu/CDCNPM:latest
 
       - name: Set up environment variables
         run: |
